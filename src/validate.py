@@ -39,7 +39,8 @@ def validate(df):
     df["product_id"] = pd.to_numeric(df["product_id"], errors="coerce").astype("Int64")
     df["quantity"] = pd.to_numeric(df["quantity"], errors="coerce").astype("Int64")
     df["amount"] = pd.to_numeric(df["amount"], errors="coerce")
-    df["status"] = (df["status"].astype(str).str.strip().replace("", pd.NA))
+    df["status"] = df["status"].astype(str).str.strip().replace({"": pd.NA, "nan": pd.NA, "<NA>": pd.NA})
+
 
     # 4. Data — jedna ścieżka, ze stringa
     df["order_date"] = pd.to_datetime(

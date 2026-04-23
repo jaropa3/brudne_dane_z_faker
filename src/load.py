@@ -20,7 +20,7 @@ def _compute_hash(file_path: Path) -> str:
     content = file_path.read_bytes()
     return hashlib.sha256(content).hexdigest()
 
-def save_qarantine(df, name: str):
+def save_quarantine(df, name: str):
     base_dir = Path(__file__).resolve().parents[1]
     today_str = datetime.today().strftime("%Y%m%d_%H_%M_%S")
     output_dir = base_dir / config["paths"]["quarantine"]
