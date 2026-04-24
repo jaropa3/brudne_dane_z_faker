@@ -16,8 +16,7 @@ def main():
     engine = get_engine(db_config)
     
     raw_data_path = Path(config["paths"]["raw_data"])
-    #nie zapisywać valid_oders do pliku tylko df... pipe line w datafusion... sprawdzic pricing
-    #zapis do bucketa. zrobić orkiestracje i do gcp. zapytania sql... zadania z cloude 7 z sql*. znalezc githuba nieinformatyka
+    
     orders_df = load_csv(raw_data_path / config["files"]["orders"])
     valid_orders, quarantine, duplicates = validate(orders_df)
 
