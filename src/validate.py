@@ -48,14 +48,10 @@ def validate(df):
         errors="coerce"
     )
 
-    # duplikaty
-    rejected_duplicates_mask = df.duplicated(subset=["order_id"],keep="last")  # zostawiasz ostatni → reszta to odrzucone
-    duplicates_mask = df.duplicated(subset=["order_id"], keep=False)
-    duplicates = df[rejected_duplicates_mask]
-    df = df.sort_values("order_date").drop_duplicates(
-        subset=["order_id"],
-        keep="last"
-    )
+    # duplikaty — licz na posortowanym df, żeby duplicates i valid były spójne
+    df = df.sort_values("order_date")
+    duplicates = df[df.duplicated(subset=["order_id"], keep="last")]
+    df = df.drop_duplicates(subset=["order_id"], keep="last")
 
     # 5. Reguły — osobna kolumna na każdy powód odrzucenia
     now = pd.Timestamp.now()
@@ -89,7 +85,7 @@ def validate(df):
             "total_rows":       len(df),
             "valid_rows":       len(valid),
             "quarantine_rows":  len(quarantine),
-            "duplikates":       len(duplicates),
+            "duplicates":       len(duplicates),
             "rules_failed":     rule_stats,
         }
     )

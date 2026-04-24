@@ -1,29 +1,25 @@
-import pandas as pd
-from sqlalchemy import create_engine, text
-from dotenv import load_dotenv
-import os
-from sqlalchemy.engine import URL
+from sqlalchemy import text
 from pathlib import Path
-from psycopg2 import sql
 import yaml
-from datetime import datetime, timezone
+from datetime import datetime
 import hashlib
 
 def load_config():
-
-    with open("src/config.yaml") as f:
+    config_path = Path(__file__).parent / "config.yaml"
+    with open(config_path) as f:
         return yaml.safe_load(f)
-    
-config = load_config()    
+
 
 def _compute_hash(file_path: Path) -> str:
     content = file_path.read_bytes()
     return hashlib.sha256(content).hexdigest()
 
 def save_quarantine(df, name: str):
+    config = load_config()
     base_dir = Path(__file__).resolve().parents[1]
     today_str = datetime.today().strftime("%Y%m%d_%H_%M_%S")
     output_dir = base_dir / config["paths"]["quarantine"]
+    output_dir.mkdir(parents=True, exist_ok=True)
     file_name = f"{config['output']['raport_name']}_{name}_{today_str}.xlsx"
     df.to_excel(output_dir / file_name, index=False)
 
@@ -42,13 +38,8 @@ def insert_raw_file(engine, path: str) -> None:
         )
 
 def truncat_stag(engine):
-    with engine.connect() as conn:
-        conn.execute(text("TRUNCATE stag_customers"))
-        conn.commit()
-        conn.execute(text("TRUNCATE stag_products"))
-        conn.commit()
-        conn.execute(text("TRUNCATE stag_orders"))
-        conn.commit()
+    with engine.begin() as conn:
+        conn.execute(text("TRUNCATE stag_customers, stag_products, stag_orders"))
 
 def insert_from_stagging_to_core(engine):
     with engine.begin() as conn:
@@ -78,14 +69,18 @@ def insert_from_stagging_to_core(engine):
                     ELSE 'UNKNOWN'
                 END
             FROM stag_orders s
-            WHERE
+            WHERE (
                 NOT EXISTS (
                     SELECT 1 FROM products p WHERE p.product_id = s.product_id
                 )
                 OR NOT EXISTS (
                     SELECT 1 FROM customers c WHERE c.customer_id = s.customer_id
                 )
-                """))
+            )
+            AND NOT EXISTS (
+                SELECT 1 FROM rejected_orders r WHERE r.order_id = s.order_id
+            )
+        """))
         conn.execute(text("""
             INSERT INTO orders
             SELECT s.*

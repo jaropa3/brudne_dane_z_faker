@@ -1,8 +1,6 @@
 from sqlalchemy import create_engine
-from dotenv import load_dotenv
 import os
 from sqlalchemy.engine import URL
-from pathlib import Path
 
 def get_db_config(config: dict) -> dict:
         

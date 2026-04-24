@@ -6,5 +6,5 @@ pyarrow
 pyyaml
 openpyxl
 psycopg2
-dotenv
+python-dotenv
 faker

@@ -1,15 +1,8 @@
 import pandas as pd
-from pathlib import Path
 import chardet
 from src.logger_app import setup_logger
 
 logger = setup_logger("load")
-
-def read_input(raw_data_file_path):
-    base_path = Path(__file__).resolve().parent
-    data_path = base_path.parent / raw_data_file_path
-    df = pd.read_csv(data_path)
-    return df
 
 def load_csv(path: str) -> pd.DataFrame:
     """

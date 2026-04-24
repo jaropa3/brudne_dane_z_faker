@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from src.load import load_config, save_quarantine, insert_raw_file, insert_from_stagging_to_core, truncat_stag
 from src.extract import load_csv
 from src.validate import validate
-from src.copy_io import copy_from_file
+from src.copy_io import copy_from_file, copy_from_df
 from src.connection import get_engine, get_db_config
 from src.logger_app import setup_logger
 
@@ -22,15 +22,12 @@ def main():
 
     save_quarantine(quarantine, "quarantine")
     save_quarantine(duplicates, "duplicates")
-    
-    valid_orders_path = Path("valid_orders.csv")
-    valid_orders.to_csv(valid_orders_path, index=False)
-    
+
     try:
         truncat_stag(engine)
         copy_from_file(engine, raw_data_path / config["files"]["products"], table="stag_products")
         copy_from_file(engine, raw_data_path / config["files"]["customers"], table="stag_customers")
-        copy_from_file(engine, valid_orders_path, table="stag_orders")
+        copy_from_df(engine, valid_orders, table="stag_orders")
         insert_from_stagging_to_core(engine)
         insert_raw_file(engine, raw_data_path / config["files"]["products"])
     except Exception:
