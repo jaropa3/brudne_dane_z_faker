@@ -4,20 +4,36 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 
+_SKIP_ATTRS = frozenset({
+    "name", "msg", "args", "created", "filename", "funcName",
+    "levelname", "levelno", "lineno", "module", "msecs", "message",
+    "pathname", "process", "processName", "relativeCreated",
+    "stack_info", "thread", "threadName", "exc_info", "exc_text",
+    "taskName",
+})
+
 class JsonFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
+        record.message = record.getMessage()
         log = {
-            "time": datetime.now(timezone.utc).isoformat(),  # ISO8601
+            "time": datetime.now(timezone.utc).isoformat(),
             "level": record.levelname,
-            "msg": record.getMessage(),
+            "msg": record.message,
             "logger": record.name,
         }
 
-        # dodatkowe pola (extra=...)
-        if hasattr(record, "extra"):
-            log.update(record.extra)
+        # extra fields added via extra={...}
+        for key, val in record.__dict__.items():
+            if key not in _SKIP_ATTRS:
+                log[key] = val
 
-        return json.dumps(log, ensure_ascii=False)
+        if record.exc_info:
+            log["exc"] = self.formatException(record.exc_info)
+
+        if record.stack_info:
+            log["stack"] = self.formatStack(record.stack_info)
+
+        return json.dumps(log, ensure_ascii=False, default=str)
 
 def setup_logger(name: str) -> logging.Logger:
     logger = logging.getLogger(name)

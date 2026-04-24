@@ -86,13 +86,11 @@ def validate(df):
     logger.info(
         "data_valid_summary",
         extra={
-            "extra": {
-                "total_rows":       len(df),
-                "valid_rows":       len(valid),
-                "quarantine_rows":  len(quarantine),
-                "duplikates":       len(duplicates),
-                "rules_failed":     rule_stats,
-            }
+            "total_rows":       len(df),
+            "valid_rows":       len(valid),
+            "quarantine_rows":  len(quarantine),
+            "duplikates":       len(duplicates),
+            "rules_failed":     rule_stats,
         }
     )
 
