@@ -12,6 +12,7 @@ _SKIP_ATTRS = frozenset({
     "taskName",
 })
 
+
 class JsonFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         record.message = record.getMessage()
@@ -22,7 +23,6 @@ class JsonFormatter(logging.Formatter):
             "logger": record.name,
         }
 
-        # extra fields added via extra={...}
         for key, val in record.__dict__.items():
             if key not in _SKIP_ATTRS:
                 log[key] = val
@@ -35,28 +35,29 @@ class JsonFormatter(logging.Formatter):
 
         return json.dumps(log, ensure_ascii=False, default=str)
 
-def setup_logger(name: str) -> logging.Logger:
+
+def setup_logger(name: str = "src") -> logging.Logger:
+    """Configure handlers on the given logger (idempotent).
+
+    Call once at the entrypoint with the package name. Module-level loggers
+    obtained via logging.getLogger(__name__) will propagate to this one.
+    """
     logger = logging.getLogger(name)
     if logger.handlers:
         return logger
     logger.setLevel(logging.INFO)
     logger.propagate = False
-    
-    # upewnij się że katalog istnieje
-    Path("logs").mkdir(exist_ok=True)
 
+    Path("logs").mkdir(exist_ok=True)
     formatter = JsonFormatter()
-    
-    # konsola
+
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(formatter)
-    
-    # plik
+
     file_handler = logging.FileHandler(f"logs/etl_{datetime.now():%Y%m%d}.log")
-    
     file_handler.setFormatter(formatter)
 
     logger.addHandler(handler)
     logger.addHandler(file_handler)
-    
+
     return logger

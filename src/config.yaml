@@ -2,7 +2,6 @@ database:
   host: localhost
   port: 5432
   DB_name: postgres
-  sslmode: require
 
 paths:
   raw_data: data/raw_data
@@ -12,4 +11,4 @@ files:
   orders: orders.csv
   products: products.csv
 output:
-  raport_name: raport_rekordow_odrzuconych
+  report_name: raport_rekordow_odrzuconych

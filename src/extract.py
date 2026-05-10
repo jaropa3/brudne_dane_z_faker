@@ -1,21 +1,16 @@
+import logging
 import pandas as pd
 import chardet
-from src.logger_app import setup_logger
 
-logger = setup_logger("load")
+logger = logging.getLogger(__name__)
+
 
 def load_csv(path: str) -> pd.DataFrame:
-    """
-    Wczytuje CSV jako raw strings.
-    Wykrywa encoding i separator automatycznie, ale pozwala je nadpisać.
-    """
-    # Najpierw wykryj encoding
-  
+    """Wczytuje CSV jako raw strings z auto-detekcją encodingu i separatora."""
     with open(path, "rb") as f:
-        detected = chardet.detect(f.read(10_000))  # pierwsze 10KB wystarczy
+        detected = chardet.detect(f.read(10_000))
     encoding = detected["encoding"] or "utf-8"
 
-    # Wczytaj pierwszą linię żeby wykryć separator
     with open(path, "r", encoding=encoding, errors="replace") as f:
         first_line = f.readline()
     sep = max([",", ";", "\t", "|"], key=first_line.count)
@@ -25,15 +20,16 @@ def load_csv(path: str) -> pd.DataFrame:
         header=0,
         sep=sep,
         encoding=encoding,
-        encoding_errors="replace",   # nie crashuj na złym znaku
-        dtype=str,                   # wszystko jako string — typy castujepi później
-        keep_default_na=False,       # nie zamieniaj "NA", "NULL", "" na NaN automatycznie
-        skipinitialspace=True,       # usuń spacje po separatorze
-        on_bad_lines="warn",         # nie crashuj na złej linii, tylko zaloguj
+        encoding_errors="replace",
+        dtype=str,
+        keep_default_na=False,
+        skipinitialspace=True,
+        on_bad_lines="warn",
     )
 
-    # Wyczyść nazwy kolumn — spacje, wielkie litery
     df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")
-    logger.info("-------START PIPELINE-------")
-    #print(f"Loaded: {len(df)} rows | encoding: {encoding} | sep: repr({sep!r})")
+    logger.info(
+        "csv_loaded",
+        extra={"path": str(path), "rows": len(df), "encoding": encoding, "sep": sep},
+    )
     return df
